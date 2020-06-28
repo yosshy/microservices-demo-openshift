@@ -21,7 +21,10 @@ Sock Shopのデザインは下記の通りで、Java, NodeJS, Goなどとマイ�
 本レポジトリのマニフェストファイルは、SCCの変更やcluster-adminを持っていなくてもOpenShift上で動くように修正しています。
 
 ```
-$ oc apply -f complete-demo.yaml
+$ export OCP_USER=userX
+$ oc new-project $OCP_USER-sockshop
+
+$ oc apply -f complete-demo.yaml -n $OCP_USER-sockshop
 deployment.extensions/carts-db created
 service/carts-db created
 deployment.extensions/carts created
@@ -418,6 +421,34 @@ APIによっては、認証が必要なことがあります。
 curl -XGET -c cookie.txt https://xxxxx/login
 ```
 
+### JSONの整形方法
+`curl`でAPIを実行した際のレスポンスはJSON形式ですが、なにもしないと1行にまとめられていて見づらいです。
+`jq`か`python`などを使って見やすく表示しましょう。
+
+```
+$ curl -X GET http://xxxxx/ | jq .
+{
+    "id": "3395a43e-2d88-40de-b95f-e00e1502085b",
+    "name": "Colourful",
+    "description": "proident occaecat irure et excepteur labore minim nisi amet irure",
+    "imageUrl": [
+        "/catalogue/images/colourful_socks.jpg",
+        "/catalogue/images/colourful_socks.jpg"
+    ],
+```
+
+```
+$ curl -X GET http://xxxxx/ | python -mjson.tool
+{
+    "id": "3395a43e-2d88-40de-b95f-e00e1502085b",
+    "name": "Colourful",
+    "description": "proident occaecat irure et excepteur labore minim nisi amet irure",
+    "imageUrl": [
+        "/catalogue/images/colourful_socks.jpg",
+        "/catalogue/images/colourful_socks.jpg"
+    ],
+```
+
 ### フロントエンドアドレス
 フロントエンドアドレスを環境変数に指定しておきます。
 ```
@@ -671,6 +702,16 @@ cartsサービスを落としたあと、UI上からカートボタンが消え�
 アクセスの度にcartsサービスのタイムアウトを待っているのがわかるのではないでしょうか。
 サーキットブレーカを実装した場合にはどのような動きになるか考えてみよう。
 
+cartsサービスを落としたあとに、タイムアウトで30秒ほど待っている様子。  
+![carts-timeout](images/carts-timeout.png)
+
+### サービスを復活させよう
+落としたcartsサービスを元に戻しましょう。
+
+```
+$ oc scale --replicas=1 deployment/carts
+```
+
 ### サービスをスケールさせてみよう
 マイクロサービスのスケーリングについて考えてみます。  
 マイクロサービスでは特定のサービスのみをスケールすることが容易であることが特徴の１つです。
@@ -683,6 +724,7 @@ $ oc scale --replicas=3 deployment/front-end
 ### サービスをデプロイしてみよう
 フロントエンドのコンテナイメージを変更してデプロイしてみよう。  
 サンプルで、背景色を変更したフロントエンドのイメージを用意しました。利用したい人は下記のように入れ替えてデプロイしてみましょう。
+下のサンプルを利用すると、背景が黄色から緑色に変更されます。
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -699,8 +741,8 @@ spec:
     spec:
       containers:
       - name: front-end
-        image: mosuke5/front-end:master-bd5039f4
-        #image: weaveworksdemos/front-end:0.3.12
+        #image: mosuke5/front-end:master-49c0d1f
+        image: mosuke5/front-end:master-7ad6254
 ```
 
 ```
@@ -711,7 +753,7 @@ $ oc apply -f complete-demo.yml
 続いて、トレーシングを体験するためにjaegerなどのコンポーネントをデプロイします。
 
 ```
-$ oc apply -f tracing/jaeger.yml
+$ oc apply -f jaeger.yml
 $ oc expose service/jaeger-query
 $ oc get route
 NAME           HOST/PORT                                                           PATH      SERVICES       PORT         TERMINATION   WILDCARD
@@ -728,3 +770,7 @@ jaeger-query   jaeger-query-sock-shop.xxxxx             jaeger-query   query-htt
 
 paymentサービスに障害が起きたと仮定し、paymentサービスを落としたあとに、もう一度購入操作をしてみましょう。
 この複雑な処理のなかでもどこでエラーが起きたか一目瞭然に確認することができます。
+
+## サービスメッシュ
+Istioを使ったサービスメッシュによるマイクロサービスの課題解決を体験する場合は続きで以下にトライしてみましょう。  
+[Service Mesh for sockshop](servicemesh/workshop-servicemesh.md)
