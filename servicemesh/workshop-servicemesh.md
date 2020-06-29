@@ -52,16 +52,16 @@ prometheus-884ff6bf9-5mbh7                2/2     Running   12         5d19h
 インストールしたコントロールプレーンが対象とする範囲を決めます。
 `ServiceMeshMemberRoll`と呼ばれるカスタムリソースで設定できます。
 今回はひとつのsockshopアプリケーションのProjectのみとなります。  
-`configureMembers`に`userX-sockshop`が含まれていればメンバー追加ができています。
+`configureMembers`に`user3-sockshop`が含まれていればメンバー追加ができています。
 
 ```
-// userX を修正の上、マニフェストapplyする
+// user3 を修正の上、マニフェストapplyする
 $ oc apply -f member-roll.yaml -n $OCP_USER-istio-system
 servicemeshmemberroll.maistra.io/default created
 
 $ oc get ServiceMeshMemberRoll default -o yaml | grep -A 1 configuredMembers
   configuredMembers:
-  - userX-sockshop
+  - user3-sockshop
 ```
 
 この時点で、今まで通りRoute経由でSockShopへはアクセスできなくなります（確認してみましょう）。  
@@ -195,7 +195,7 @@ sockshop-wildcard-gateway   40s
 //既存のRoute削除
 $ oc delete route front-end -n $OCP_USER-sockshop
 
-// userX を適切なものに変更する
+// user3 を適切なものに変更する
 $ vim front-end-route.yaml
 spec:
   host: front-end-user1-sockshop.apps.cluster-6a92.6a92.sandbox595.opentlc.com
@@ -258,10 +258,10 @@ front-end-v2-647dbd4ccc-dp778        2/2     Running   0          97m
 まずはfront-endの行き先の設定(`DestinationRule`)をします。
 
 ```
-// userXを変更。
+// user3を変更。
 $ vim front-end-destinationrule.yaml
 spec:
-  host: front-end.userX-sockshop.svc.cluster.local
+  host: front-end.user3-sockshop.svc.cluster.local
 
 $ oc apply -f front-end-destinationrule.yaml -n $OCP_USER-sockshop 
 ```
@@ -269,7 +269,7 @@ $ oc apply -f front-end-destinationrule.yaml -n $OCP_USER-sockshop
 続いて、実際のトラフィックの分散ルールを更新します。
 
 ```
-// userXを変更(3箇所あります)
+// user3を変更(3箇所あります)
 $ vim front-end-virtualservice-v2.yaml
 
 $ oc apply -f front-end-virtualservice-v2.yaml -n $OCP_USER-sockshop

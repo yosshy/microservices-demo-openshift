@@ -23,7 +23,7 @@ Sock Shopのデザインは下記の通りで、Java, NodeJS, Goなどとマイ�
 本レポジトリのマニフェストファイルは、SCCの変更やcluster-adminを持っていなくてもOpenShift上で動くように修正しています。
 
 ```
-$ export OCP_USER=userX
+$ export OCP_USER=user3
 $ oc new-project $OCP_USER-sockshop
 
 $ oc apply -f complete-demo.yaml -n $OCP_USER-sockshop
