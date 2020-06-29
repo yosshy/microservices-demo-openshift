@@ -14,6 +14,8 @@ Sock Shopのデザインは下記の通りで、Java, NodeJS, Goなどとマイ�
 - Google Chrome
 - ocコマンドのインストール
 - curlのインストール
+- Githubアカウント
+  - 本レポジトリをフォークしてください。
 - jqのインストール (recommended)
 - postmanのインストール (optional)
 
